@@ -1,0 +1,1 @@
+把本目录里的所有文件上传到静态站点根目录（GitHub Pages / Cloudflare Pages / Netlify）。\n不要上传项目的其他目录：不要上传 data、metadata、serve.py、备份文件。\n页面打开后输入班级口令才解密卡册；站点本身没有编辑接口。\n

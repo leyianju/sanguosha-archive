@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080a0f">
+  <meta name="description" content="桃园卡册 —— 班级内部只读卡牌收藏。">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>桃园卡册 · 三国杀卡牌收藏</title>
+  <script>
+    (() => {
+      try {
+        const choice = localStorage.getItem("sanguosha-theme") || "auto";
+        const dark = choice === "dark" ||
+          (choice === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        document.documentElement.dataset.themeChoice = choice;
+      } catch (error) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="lock.css">
+</head>
+<body>
+  <svg class="svg-sprite" aria-hidden="true">
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="icon-expand" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></symbol>
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></symbol>
+    <symbol id="icon-book" viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 0 1 3 3v13a3 3 0 0 0-3-3H4Z"/><path d="M20 4h-6v16a3 3 0 0 1 3-3h3Z"/></symbol>
+    <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M4 20h4L20 8l-4-4L4 16Z"/><path d="m14 6 4 4"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z"/></symbol>
+    <symbol id="icon-auto" viewBox="0 0 24 24"><path d="M12 3v18M5 7h14M5 17h14"/><circle cx="12" cy="12" r="4"/></symbol>
+    <symbol id="icon-spark" viewBox="0 0 24 24"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5Z"/><path d="m19 15 .7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7Z"/></symbol>
+  </svg>
+
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+  <div class="grain"></div>
+
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="桃园卡册首页">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48">
+          <path d="M24 4 42 15v18L24 44 6 33V15Z"/>
+          <path d="M24 11 35 18v12L24 37l-11-7V18Z"/>
+          <path d="M24 16v16M17 22l7-5 7 5"/>
+        </svg>
+      </span>
+      <span class="brand-copy">
+        <strong>桃园卡册</strong>
+        <em>SANGUOSHA ARCHIVE</em>
+      </span>
+    </a>
+    <div class="header-actions">
+      <span class="collection-mark"><i></i> 私人收藏</span>
+      <span class="readonly-badge" id="readonlyBadge" hidden>只读陈列</span>
+      <button type="button" class="quiet-button theme-toggle" id="themeToggle" aria-label="切换深浅色">
+        <svg class="icon"><use id="themeIcon" href="#icon-auto"></use></svg>
+        <span id="themeLabel">跟随系统</span>
+      </button>
+      <button type="button" class="quiet-button" id="headerViewerBtn">
+        <svg class="icon"><use href="#icon-expand"></use></svg>
+        <span>纯净展示</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span>SANGUOSHA · PERSONAL COLLECTION</p>
+        <h1>一将，<br><span>一卡，一局。</span></h1>
+        <p class="hero-intro">
+          把每一张自制的三国杀卡收回卡册。称号、名字、势力、技能与那句引言，
+          都从卡面里认出来，放在该在的位置。翻开一张，就是开一局。
+        </p>
+        <div class="hero-actions">
+          <button type="button" class="button button-primary" id="browseBtn">
+            翻阅卡册 <svg class="icon"><use href="#icon-arrow"></use></svg>
+          </button>
+          <button type="button" class="text-link" id="heroViewerBtn">
+            直接从第一张开始看
+          </button>
+        </div>
+      </div>
+      <aside class="ledger">
+        <div class="ledger-head"><span>CATALOGUE INDEX</span><span>NO. 2304</span></div>
+        <div class="ledger-total"><strong id="statTotal">0</strong><span>张卡<br><em>IN THE ARCHIVE</em></span></div>
+        <div class="ledger-line"></div>
+        <dl class="ledger-facts">
+          <div><dt>势力</dt><dd id="statFactions">—</dd></div>
+          <div><dt>技能</dt><dd id="statSkills">—</dd></div>
+          <div><dt>编号</dt><dd id="statRange">—</dd></div>
+          <div><dt>附件</dt><dd id="statAttachments">—</dd></div>
+        </dl>
+        <p class="ledger-note">卡面按 1098 × 1542 原比例陈列，不裁切，不拉伸。</p>
+      </aside>
+    </section>
+
+    <section class="collection" id="collection">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow"><span></span>THE CARD CATALOGUE</p>
+          <h2>我的卡册</h2>
+        </div>
+        <div class="result-meta">
+          <span id="resultSummary">正在整理卡册…</span>
+          <button type="button" class="text-link subtle" id="clearFiltersBtn" hidden>清除筛选</button>
+        </div>
+      </div>
+
+      <div class="folder-bar">
+        <div class="folder-label">
+          <svg class="icon"><use href="#icon-book"></use></svg>
+          <span>分册</span><small>VOLUMES</small>
+        </div>
+        <div class="folder-tabs" id="folderTabs" role="group" aria-label="按分册浏览"></div>
+        <button type="button" class="quiet-button folder-manage-btn" id="manageFoldersBtn">
+          <svg class="icon"><use href="#icon-edit"></use></svg> 分册管理
+        </button>
+      </div>
+
+      <div class="toolbar">
+        <label class="search-field" for="searchInput">
+          <svg class="icon"><use href="#icon-search"></use></svg>
+          <input id="searchInput" type="search" placeholder="检索名字、称号、技能或引言…" autocomplete="off" spellcheck="false">
+          <kbd>/</kbd>
+        </label>
+        <div class="filter-row">
+          <div class="select-wrap">
+            <select id="factionFilter" aria-label="按势力筛选"><option value="">全部势力</option></select>
+            <svg class="icon"><use href="#icon-chevron"></use></svg>
+          </div>
+          <div class="select-wrap">
+            <select id="prefixFilter" aria-label="按前缀筛选"><option value="">全部前缀</option></select>
+            <svg class="icon"><use href="#icon-chevron"></use></svg>
+          </div>
+          <div class="select-wrap">
+            <select id="sortSelect" aria-label="排序">
+              <option value="id">按编号</option>
+              <option value="name">按名字</option>
+              <option value="title">按称号</option>
+            </select>
+            <svg class="icon"><use href="#icon-chevron"></use></svg>
+          </div>
+          <span class="filter-spacer"></span>
+          <button type="button" class="quiet-button" id="addCardBtn">
+            <svg class="icon"><use href="#icon-plus"></use></svg> 新增卡牌
+          </button>
+          <button type="button" class="quiet-button" id="viewerBtn">
+            <svg class="icon"><use href="#icon-expand"></use></svg> 纯净展示
+          </button>
+        </div>
+      </div>
+
+      <div class="card-grid" id="cardGrid" aria-live="polite"></div>
+      <div class="empty-state" id="emptyState" hidden>
+        <div class="empty-mark">?</div>
+        <h3>没有找到这张卡</h3>
+        <p>换个关键词，或者回到全部卡册。</p>
+        <button type="button" class="button button-ghost" id="emptyClearBtn">回到全部</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>桃园卡册 · SANGUOSHA ARCHIVE</span>
+    <span>所有卡面均为本地收藏，仅供陈列与翻阅。</span>
+  </footer>
+
+  <div class="modal-overlay" id="detailOverlay" hidden>
+    <div class="modal modal-detail" role="dialog" aria-modal="true" aria-labelledby="detailName">
+      <button type="button" class="modal-close" data-close="detailOverlay" aria-label="关闭">
+        <svg class="icon"><use href="#icon-close"></use></svg>
+      </button>
+      <div class="detail-layout">
+        <div class="detail-visual">
+          <div class="detail-card-frame">
+            <img id="detailImage" alt="">
+          </div>
+          <p class="detail-id" id="detailId">—</p>
+        </div>
+        <div class="detail-copy">
+          <div class="detail-scroll">
+            <div class="detail-kicker">
+              <span class="faction-badge" id="detailFaction">—</span>
+              <span class="hp-badge" id="detailHp">—</span>
+              <span class="series-tag" id="detailSeries">—</span>
+              <span class="prefix-badge" id="detailPrefix" hidden></span>
+              <button type="button" class="detail-viewer-btn" id="detailEditBtn">
+                <svg class="icon"><use href="#icon-edit"></use></svg> 编辑
+              </button>
+              <button type="button" class="detail-viewer-btn" id="detailViewerBtn">
+                <svg class="icon"><use href="#icon-expand"></use></svg> 纯净展示
+              </button>
+            </div>
+            <h2 id="detailHeading"><span class="name-prefix" id="detailPrefixMark" hidden></span><span id="detailName">—</span></h2>
+            <p class="detail-title" id="detailTitle">—</p>
+            <div class="skills-block" id="detailSkills"></div>
+            <blockquote class="detail-quote" id="detailQuote"></blockquote>
+            <div class="attachments-block" id="detailAttachments" hidden>
+              <div class="attachments-head">
+                <strong>附属牌</strong>
+                <span>ATTACHMENTS</span>
+              </div>
+              <div class="attachment-grid" id="detailAttachmentGrid"></div>
+            </div>
+            <div class="detail-meta">
+              <span id="detailMetaLeft">—</span>
+              <span id="detailMetaRight">—</span>
+            </div>
+          </div>
+          <div class="detail-bottom">
+            <button type="button" class="button button-primary" id="detailPrevBtn">
+              <svg class="icon" style="transform:rotate(180deg)"><use href="#icon-arrow"></use></svg> 上一张
+            </button>
+            <button type="button" class="button button-ghost" id="detailNextBtn">
+              下一张 <svg class="icon"><use href="#icon-arrow"></use></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="editOverlay" hidden>
+    <div class="modal modal-edit" role="dialog" aria-modal="true" aria-labelledby="editHeading">
+      <button type="button" class="modal-close" data-close="editOverlay" aria-label="关闭编辑">
+        <svg class="icon"><use href="#icon-close"></use></svg>
+      </button>
+      <div class="edit-head">
+        <p class="eyebrow"><span></span>EDIT THE CARD</p>
+        <h2 id="editHeading">编辑卡牌</h2>
+        <p id="editSub">修改会写回本地卡表，下一次打开还在。</p>
+      </div>
+      <form id="editForm" class="edit-form" novalidate>
+        <div class="edit-grid">
+          <label class="edit-field">
+            <span>称号</span>
+            <input id="editTitle" maxlength="40" required autocomplete="off">
+          </label>
+          <label class="edit-field">
+            <span>名字</span>
+            <input id="editName" maxlength="40" required autocomplete="off">
+          </label>
+          <label class="edit-field">
+            <span>势力</span>
+            <input id="editFaction" maxlength="12" list="factionList" autocomplete="off">
+          </label>
+          <label class="edit-field">
+            <span>前缀 <small>没有就留空</small></span>
+            <input id="editPrefix" maxlength="12" placeholder="例如 SP" autocomplete="off">
+          </label>
+          <label class="edit-field">
+            <span>当前体力</span>
+            <input id="editHp" type="number" min="0" max="30" step="1" inputmode="numeric">
+          </label>
+          <label class="edit-field">
+            <span>体力上限</span>
+            <input id="editHpMax" type="number" min="0" max="30" step="1" inputmode="numeric">
+          </label>
+          <label class="edit-field">
+            <span>护甲</span>
+            <input id="editArmor" type="number" min="0" max="30" step="1" inputmode="numeric">
+          </label>
+          <label class="edit-field">
+            <span>分册归属</span>
+            <select id="editSeries"></select>
+          </label>
+          <label class="edit-field edit-field-wide">
+            <span>引言</span>
+            <textarea id="editQuote" rows="3" maxlength="300"></textarea>
+          </label>
+          <label class="edit-field edit-field-wide edit-image-field" id="editImageField" hidden>
+            <span>卡面图片 <small>新卡需要上传；建议与现卡同比例</small></span>
+            <input id="editImageInput" type="file" accept="image/jpeg,image/png,image/webp">
+            <span class="edit-image-actions">
+              <button type="button" class="quiet-button" id="recognizeBtn" hidden>
+                <svg class="icon"><use href="#icon-spark"></use></svg> 识别卡面
+              </button>
+              <span class="edit-recognize-status" id="recognizeStatus"></span>
+            </span>
+            <span class="edit-image-preview" id="editImagePreview" hidden>
+              <img id="editImagePreviewImg" alt="新卡预览">
+              <button type="button" class="text-link" id="editImageClear">移除图片</button>
+            </span>
+          </label>
+        </div>
+        <datalist id="factionList"></datalist>
+        <datalist id="seriesList"></datalist>
+
+        <div class="edit-skills-head">
+          <div>
+            <strong>技能</strong>
+            <small>名字和完整描述都可以改；空技能保存时会自动忽略。</small>
+          </div>
+          <button type="button" class="quiet-button" id="addSkillBtn">
+            + 添加技能
+          </button>
+        </div>
+        <div class="edit-skills" id="editSkills"></div>
+
+        <p class="edit-error" id="editError" hidden></p>
+        <div class="edit-actions">
+          <button type="button" class="button button-ghost" data-close="editOverlay">取消</button>
+          <button type="submit" class="button button-primary" id="editSaveBtn">保存修改</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="folderOverlay" hidden>
+    <div class="modal modal-folder" role="dialog" aria-modal="true" aria-labelledby="folderHeading">
+      <button type="button" class="modal-close" data-close="folderOverlay" aria-label="关闭分册管理">
+        <svg class="icon"><use href="#icon-close"></use></svg>
+      </button>
+      <div class="edit-head">
+        <p class="eyebrow"><span></span>VOLUME SETTINGS</p>
+        <h2 id="folderHeading">管理分册</h2>
+        <p>改名字不会动卡；把卡移到别的分册，去卡牌详情的「编辑」里改「分册归属」。</p>
+      </div>
+      <div class="folder-manage-list" id="folderManageList"></div>
+      <div class="folder-add-row">
+        <input id="newFolderName" maxlength="30" placeholder="新分册名，例如：同学局" autocomplete="off">
+        <select id="newFolderParent" aria-label="新分册的上级"></select>
+        <button type="button" class="button button-ghost" id="addFolderBtn">新增分册</button>
+      </div>
+      <p class="edit-error" id="folderError" hidden></p>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="attachmentOverlay" hidden>
+    <div class="modal modal-attachment" role="dialog" aria-modal="true" aria-labelledby="attachmentName">
+      <button type="button" class="modal-close" data-close="attachmentOverlay" aria-label="关闭附件">
+        <svg class="icon"><use href="#icon-close"></use></svg>
+      </button>
+      <div class="attachment-layout">
+        <div class="attachment-visual">
+          <img id="attachmentImage" alt="">
+        </div>
+        <div class="attachment-copy">
+          <p class="eyebrow"><span></span>ATTACHED CARD</p>
+          <h2 id="attachmentName">—</h2>
+          <p class="detail-title" id="attachmentKind">—</p>
+          <p class="attachment-owner" id="attachmentOwner">—</p>
+          <p class="attachment-note" id="attachmentNote"></p>
+          <div class="attachment-actions">
+            <button type="button" class="button button-ghost" id="attachmentFlipBtn" hidden>翻到背面</button>
+            <button type="button" class="button button-primary" data-close="attachmentOverlay">收起</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="viewer" id="viewer" hidden>
+    <button type="button" class="viewer-close" data-close="viewer" aria-label="退出纯净展示">
+      <svg class="icon"><use href="#icon-close"></use></svg>
+    </button>
+    <button type="button" class="viewer-arrow prev" id="viewerPrev" aria-label="上一张">
+      <svg class="icon" style="transform:rotate(180deg)"><use href="#icon-arrow"></use></svg>
+    </button>
+    <div class="viewer-stage">
+      <img id="viewerImage" alt="">
+    </div>
+    <button type="button" class="viewer-arrow next" id="viewerNext" aria-label="下一张">
+      <svg class="icon"><use href="#icon-arrow"></use></svg>
+    </button>
+    <div class="viewer-foot">
+      <span id="viewerCounter">00 / 00</span>
+      <span id="viewerName">—</span>
+      <span class="viewer-hint">← → 翻阅 · Esc 退出</span>
+    </div>
+  </div>
+
+
+  <div class="lock-screen" id="lockScreen">
+    <div class="lock-card">
+      <div class="lock-brand">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <path d="M24 4 42 15v18L24 44 6 33V15Z"/>
+          <path d="M24 11 35 18v12L24 37l-11-7V18Z"/>
+          <path d="M24 16v16M17 22l7-5 7 5"/>
+        </svg>
+        桃园卡册
+      </div>
+      <p class="lock-eyebrow">PRIVATE ARCHIVE · READ ONLY</p>
+      <h1>给同学的卡册</h1>
+      <p class="lock-intro">这页只对拿到班级口令的人开放。卡面、技能、引言和附件都封在加密文件里，口令不对就什么都看不到。</p>
+      <form class="lock-form" id="unlockForm">
+        <label for="unlockPassword">班级口令</label>
+        <input id="unlockPassword" type="password" autocomplete="current-password" spellcheck="false" placeholder="输入口令">
+        <button id="unlockBtn" type="submit">进入卡册</button>
+        <p class="lock-error" id="unlockError"></p>
+        <p class="lock-status" id="unlockStatus"></p>
+      </form>
+      <p class="lock-note">只读展示 · 不可编辑 / 不可新增 / 不可改分册<br>口令请只在同学之间私下传。</p>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+  <script src="secure-loader.js"></script>
+</body>
+</html>

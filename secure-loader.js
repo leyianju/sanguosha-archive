@@ -58,12 +58,27 @@
       const response = await fetch("secure/payload.json", { cache: "no-store" });
       if (!response.ok) throw new Error("找不到加密卡册文件。");
       const envelope = await response.json();
+      const chunkPaths = Array.isArray(envelope.chunks) ? envelope.chunks : [];
+      if (!chunkPaths.length) throw new Error("加密卡册没有分块信息。");
+      status.textContent = `读取加密卡册（${chunkPaths.length} 块）…`;
+      const chunkBuffers = await Promise.all(chunkPaths.map(async (path) => {
+        const chunkResponse = await fetch(path, { cache: "no-store" });
+        if (!chunkResponse.ok) throw new Error("加密卡册分块读取失败。");
+        return new Uint8Array(await chunkResponse.arrayBuffer());
+      }));
+      const total = chunkBuffers.reduce((sum, chunk) => sum + chunk.length, 0);
+      const cipher = new Uint8Array(total);
+      let offset = 0;
+      chunkBuffers.forEach((chunk) => {
+        cipher.set(chunk, offset);
+        offset += chunk.length;
+      });
       status.textContent = "校验口令…";
       const key = await deriveKey(password, b64Bytes(envelope.salt), Number(envelope.iter));
       const plain = await crypto.subtle.decrypt(
         { name: "AES-GCM", iv: b64Bytes(envelope.iv) },
         key,
-        b64Bytes(envelope.ciphertext)
+        cipher
       );
       const payload = JSON.parse(new TextDecoder().decode(plain));
       window.SANGUOSHA_DATA = payload.data;

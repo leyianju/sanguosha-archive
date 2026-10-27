@@ -61,8 +61,12 @@
       const chunkPaths = Array.isArray(envelope.chunks) ? envelope.chunks : [];
       if (!chunkPaths.length) throw new Error("加密卡册没有分块信息。");
       status.textContent = `读取加密卡册（${chunkPaths.length} 块）…`;
+      const version = envelope.version || "";
       const chunkBuffers = await Promise.all(chunkPaths.map(async (path) => {
-        const chunkResponse = await fetch(path, { cache: "no-store" });
+        const url = version
+          ? `${path}${path.includes("?") ? "&" : "?"}v=${encodeURIComponent(version)}`
+          : path;
+        const chunkResponse = await fetch(url, { cache: "no-store" });
         if (!chunkResponse.ok) throw new Error("加密卡册分块读取失败。");
         return new Uint8Array(await chunkResponse.arrayBuffer());
       }));

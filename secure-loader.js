@@ -78,7 +78,8 @@
         offset += chunk.length;
       });
       status.textContent = "校验口令…";
-      const key = await deriveKey(password, b64Bytes(envelope.salt), Number(envelope.iter));
+      const keyPassword = envelope.day ? `${password}|${envelope.day}` : password;
+      const key = await deriveKey(keyPassword, b64Bytes(envelope.salt), Number(envelope.iter));
       const plain = await crypto.subtle.decrypt(
         { name: "AES-GCM", iv: b64Bytes(envelope.iv) },
         key,
@@ -94,7 +95,7 @@
       status.textContent = "正在布置卡册…";
       await new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = "app.js";
+        script.src = `app.js?v=${encodeURIComponent(envelope.version || "")}`;
         script.onload = resolve;
         script.onerror = () => reject(new Error("卡册脚本加载失败。"));
         document.body.appendChild(script);

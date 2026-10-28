@@ -143,10 +143,15 @@
             <svg class="icon"><use href="#icon-chevron"></use></svg>
           </div>
           <div class="select-wrap">
+            <select id="rarityFilter" aria-label="按稀有度筛选"><option value="">全部稀有度</option></select>
+            <svg class="icon"><use href="#icon-chevron"></use></svg>
+          </div>
+          <div class="select-wrap">
             <select id="sortSelect" aria-label="排序">
               <option value="id">按编号</option>
               <option value="name">按名字</option>
               <option value="title">按称号</option>
+              <option value="rarity">按稀有度</option>
             </select>
             <svg class="icon"><use href="#icon-chevron"></use></svg>
           </div>
@@ -194,6 +199,7 @@
               <span class="hp-badge" id="detailHp">—</span>
               <span class="series-tag" id="detailSeries">—</span>
               <span class="prefix-badge" id="detailPrefix" hidden></span>
+              <span class="rarity-badge rarity-C" id="detailRarity">C</span>
               <button type="button" class="detail-viewer-btn" id="detailEditBtn">
                 <svg class="icon"><use href="#icon-edit"></use></svg> 编辑
               </button>
@@ -257,6 +263,17 @@
           <label class="edit-field">
             <span>前缀 <small>没有就留空</small></span>
             <input id="editPrefix" maxlength="12" placeholder="例如 SP" autocomplete="off">
+          </label>
+          <label class="edit-field">
+            <span>稀有度</span>
+            <select id="editRarity">
+              <option value="D">D</option>
+              <option value="C" selected>C</option>
+              <option value="B">B</option>
+              <option value="A">A</option>
+              <option value="S">S</option>
+              <option value="SS">SS</option>
+            </select>
           </label>
           <label class="edit-field">
             <span>当前体力</span>

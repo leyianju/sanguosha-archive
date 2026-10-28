@@ -12,7 +12,6 @@
   const THEME_MEDIA = matchMedia("(prefers-color-scheme: dark)");
   const RARITIES = ["D", "C", "B", "A", "S", "SS"];
   const RARITY_RANK = { D: 0, C: 1, B: 2, A: 3, S: 4, SS: 5 };
-  const RARITY_LABELS = { D: "D", C: "C", B: "B", A: "A", S: "S", SS: "SS" };
 
   const FACTION_COLORS = {
     魏: "#6b9bc2",
@@ -76,11 +75,6 @@
   function normalizeRarity(value) {
     const rarity = String(value || "").trim().toUpperCase();
     return RARITIES.includes(rarity) ? rarity : "C";
-  }
-
-  function rarityBadge(rarity, extraClass = "") {
-    const safe = normalizeRarity(rarity);
-    return `<span class="rarity-badge rarity-${safe} ${extraClass}">${RARITY_LABELS[safe]}</span>`;
   }
 
   function hpLabel(card) {
@@ -340,11 +334,12 @@
             <span class="card-frame">
               <img src="${escapeHtml(card.thumb)}" alt="${escapeHtml(card.name)}的卡面"
                 loading="${index < 12 ? "eager" : "lazy"}" decoding="async">
-              ${rarityBadge(card.rarity, "card-rarity")}
+              <span class="rarity-edge rarity-${normalizeRarity(card.rarity)}"></span>
             </span>
             <span class="card-caption">
               <span class="card-name">${card.prefix ? `<span class="name-prefix">${escapeHtml(card.prefix)}</span>` : ""}${escapeHtml(card.name)}</span>
               <span class="card-title">${escapeHtml(card.title)}</span>
+              <span class="card-rarity-mark rarity-${normalizeRarity(card.rarity)}" title="稀有度 ${normalizeRarity(card.rarity)}">${normalizeRarity(card.rarity)}</span>
               ${card.prefix ? `<span class="card-prefix">前缀 · ${escapeHtml(card.prefix)}</span>` : ""}
               <span class="card-id">${escapeHtml(card.id)}</span>
             </span>
@@ -421,8 +416,8 @@
     $("#detailPrefix").hidden = !prefix;
     $("#detailPrefix").textContent = prefix ? `前缀 ${prefix}` : "";
     const rarity = normalizeRarity(card.rarity);
-    $("#detailRarity").className = `rarity-badge rarity-${rarity}`;
-    $("#detailRarity").textContent = rarity;
+    $("#detailRarity").className = `detail-rarity-mark rarity-${rarity}`;
+    $("#detailRarity").textContent = `稀有度 ${rarity}`;
     $("#detailRarity").title = `稀有度 ${rarity}`;
     $("#detailTitle").textContent = card.title;
     $("#detailFaction").textContent = faction;

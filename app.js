@@ -10,6 +10,9 @@
   const THEME_KEY = "sanguosha-theme";
   const THEME_CHOICES = ["auto", "light", "dark"];
   const THEME_MEDIA = matchMedia("(prefers-color-scheme: dark)");
+  const RARITIES = ["D", "C", "B", "A", "S", "SS"];
+  const RARITY_RANK = { D: 0, C: 1, B: 2, A: 3, S: 4, SS: 5 };
+  const RARITY_LABELS = { D: "D", C: "C", B: "B", A: "A", S: "S", SS: "SS" };
 
   const FACTION_COLORS = {
     魏: "#6b9bc2",
@@ -37,6 +40,7 @@
     folder: "all",
     faction: "",
     prefix: "",
+    rarity: "",
     q: "",
     sort: "id",
     detailId: null,
@@ -67,6 +71,16 @@
 
   function factionColor(faction) {
     return FACTION_COLORS[faction] || FACTION_COLORS.其他;
+  }
+
+  function normalizeRarity(value) {
+    const rarity = String(value || "").trim().toUpperCase();
+    return RARITIES.includes(rarity) ? rarity : "C";
+  }
+
+  function rarityBadge(rarity, extraClass = "") {
+    const safe = normalizeRarity(rarity);
+    return `<span class="rarity-badge rarity-${safe} ${extraClass}">${RARITY_LABELS[safe]}</span>`;
   }
 
   function hpLabel(card) {
@@ -187,6 +201,7 @@
       card.series,
       card.faction,
       card.prefix,
+      card.rarity,
       card.quote,
       ...(card.skills || []).flatMap((skill) => [skill.name, skill.text]),
     ];
@@ -199,6 +214,11 @@
       copy.sort((a, b) => String(a.name).localeCompare(String(b.name), "zh-CN"));
     } else if (state.sort === "title") {
       copy.sort((a, b) => String(a.title).localeCompare(String(b.title), "zh-CN"));
+    } else if (state.sort === "rarity") {
+      copy.sort((a, b) => {
+        const diff = (RARITY_RANK[normalizeRarity(b.rarity)] || 0) - (RARITY_RANK[normalizeRarity(a.rarity)] || 0);
+        return diff || String(a.id).localeCompare(String(b.id), "zh-CN", { numeric: true });
+      });
     } else {
       copy.sort((a, b) => String(a.id).localeCompare(String(b.id), "zh-CN", { numeric: true }));
     }
@@ -211,6 +231,7 @@
       cardMatchesFolder(card, state.folder) &&
       (!state.faction || card.faction === state.faction) &&
       (!state.prefix || card.prefix === state.prefix) &&
+      (!state.rarity || normalizeRarity(card.rarity) === state.rarity) &&
       cardMatchesQuery(card, query)
     ));
   }
@@ -278,6 +299,19 @@
     select.value = state.prefix;
   }
 
+  function renderRarityOptions() {
+    const select = $("#rarityFilter");
+    if (!select) return;
+    const counts = new Map(RARITIES.map((rarity) => [rarity, 0]));
+    state.cards.forEach((card) => {
+      const rarity = normalizeRarity(card.rarity);
+      counts.set(rarity, (counts.get(rarity) || 0) + 1);
+    });
+    select.innerHTML = `<option value="">全部稀有度</option>${RARITIES.map((rarity) =>
+      `<option value="${rarity}">${rarity} · ${counts.get(rarity) || 0}</option>`).join("")}`;
+    select.value = state.rarity;
+  }
+
   function renderCards() {
     const grid = $("#cardGrid");
     if (state.loadError) {
@@ -306,6 +340,7 @@
             <span class="card-frame">
               <img src="${escapeHtml(card.thumb)}" alt="${escapeHtml(card.name)}的卡面"
                 loading="${index < 12 ? "eager" : "lazy"}" decoding="async">
+              ${rarityBadge(card.rarity, "card-rarity")}
             </span>
             <span class="card-caption">
               <span class="card-name">${card.prefix ? `<span class="name-prefix">${escapeHtml(card.prefix)}</span>` : ""}${escapeHtml(card.name)}</span>
@@ -317,6 +352,7 @@
               <i class="faction-dot"></i>
               <span>${escapeHtml(card.faction || "其他")}</span>
               <span class="hp-meta">· ${escapeHtml(hpLabel(card))}</span>
+              <span class="rarity-meta">· ${normalizeRarity(card.rarity)}</span>
               <span class="skill-count">· ${skills.length} 技能</span>
               ${attachmentCount ? `<span class="attachment-count">· ${attachmentCount} 附件</span>` : ""}
             </span>
@@ -328,11 +364,11 @@
   function renderSummary() {
     const total = state.filtered.length;
     const prefix = state.folder !== "all" ? `「${folderPath(state.folder)}」` : "";
-    const filtered = Boolean(state.q || state.faction || state.prefix || state.folder !== "all");
+    const filtered = Boolean(state.q || state.faction || state.prefix || state.rarity || state.folder !== "all");
     $("#resultSummary").textContent = total
       ? `${prefix}${filtered ? "筛出" : "共收录"} ${total} 张卡`
       : `${prefix}没有卡`;
-    $("#clearFiltersBtn").hidden = !(state.q || state.faction || state.prefix || state.folder !== "all");
+    $("#clearFiltersBtn").hidden = !(state.q || state.faction || state.prefix || state.rarity || state.folder !== "all");
   }
 
   function render() {
@@ -385,6 +421,10 @@
     $("#detailPrefixMark").textContent = prefix;
     $("#detailPrefix").hidden = !prefix;
     $("#detailPrefix").textContent = prefix ? `前缀 ${prefix}` : "";
+    const rarity = normalizeRarity(card.rarity);
+    $("#detailRarity").className = `rarity-badge rarity-${rarity}`;
+    $("#detailRarity").textContent = rarity;
+    $("#detailRarity").title = `稀有度 ${rarity}`;
     $("#detailTitle").textContent = card.title;
     $("#detailFaction").textContent = faction;
     $("#detailFaction").style.setProperty("--faction-color", factionColor(faction));
@@ -484,6 +524,7 @@
     $("#editName").value = card?.name || "";
     $("#editFaction").value = card?.faction || "群";
     $("#editPrefix").value = card?.prefix || "";
+    $("#editRarity").value = normalizeRarity(card?.rarity || "C");
     $("#editHp").value = card?.hp == null ? "" : String(card.hp);
     $("#editHpMax").value = card?.hp_max == null ? "" : String(card.hp_max);
     $("#editArmor").value = card?.armor ? String(card.armor) : "";
@@ -651,6 +692,7 @@
       title,
       faction: $("#editFaction").value.trim() || "其他",
       prefix: $("#editPrefix").value.trim(),
+      rarity: normalizeRarity($("#editRarity").value),
       hp: hp === null ? null : Math.round(hp),
       hp_max: hpMax === null ? null : Math.round(hpMax),
       armor: Math.round(armor),
@@ -678,10 +720,12 @@
         state.folder = data.card.series;
         state.faction = "";
         state.prefix = "";
+        state.rarity = "";
         state.q = "";
         $("#searchInput").value = "";
         $("#factionFilter").value = "";
         $("#prefixFilter").value = "";
+        $("#rarityFilter").value = "";
       } else {
         const index = state.cards.findIndex((item) => item.id === state.editId);
         if (index >= 0) state.cards[index] = data.card;
@@ -693,8 +737,10 @@
       const factions = [...new Set(state.cards.map((item) => item.faction).filter(Boolean))];
       if (state.faction && !factions.includes(state.faction)) state.faction = "";
       if (state.prefix && !state.cards.some((item) => item.prefix === state.prefix)) state.prefix = "";
+      if (state.rarity && !state.cards.some((item) => normalizeRarity(item.rarity) === state.rarity)) state.rarity = "";
       renderFactionOptions();
       renderPrefixOptions();
+      renderRarityOptions();
       render();
       closeOverlay("editOverlay");
       showDetail(data.card.id);
@@ -968,11 +1014,13 @@
     state.folder = "all";
     state.faction = "";
     state.prefix = "";
+    state.rarity = "";
     state.q = "";
     state.sort = "id";
     $("#searchInput").value = "";
     $("#factionFilter").value = "";
     $("#prefixFilter").value = "";
+    $("#rarityFilter").value = "";
     $("#sortSelect").value = "id";
     render();
   }
@@ -1014,6 +1062,7 @@
       });
       renderFactionOptions();
       renderPrefixOptions();
+      renderRarityOptions();
       render();
       const hash = /^#card=(.+)$/.exec(window.location.hash);
       if (hash) {
@@ -1043,6 +1092,10 @@
     });
     $("#prefixFilter").addEventListener("change", (event) => {
       state.prefix = event.target.value;
+      render();
+    });
+    $("#rarityFilter").addEventListener("change", (event) => {
+      state.rarity = event.target.value;
       render();
     });
     $("#sortSelect").addEventListener("change", (event) => {

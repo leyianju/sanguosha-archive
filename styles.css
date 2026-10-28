@@ -488,6 +488,26 @@ html[data-readonly="true"] #folderOverlay { display: none !important; }
   font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em;
 }
 .prefix-badge { border-color: rgba(216, 184, 120, 0.4); color: var(--gold); }
+.rarity-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 25px; min-height: 22px; padding: 0 6px;
+  border: 1px solid currentColor; color: #aab0ba;
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.06em; line-height: 1;
+}
+.rarity-D { color: #8d929b; background: rgba(141, 146, 155, 0.1); }
+.rarity-C { color: #84a978; background: rgba(132, 169, 120, 0.1); }
+.rarity-B { color: #73a5c7; background: rgba(115, 165, 199, 0.1); }
+.rarity-A { color: #ae8dca; background: rgba(174, 141, 202, 0.1); }
+.rarity-S { color: #d79a58; background: rgba(215, 154, 88, 0.1); }
+.rarity-SS { color: #e8c074; background: linear-gradient(135deg, rgba(232, 192, 116, 0.18), rgba(174, 93, 68, 0.12)); border-color: rgba(232, 192, 116, 0.7); box-shadow: 0 0 12px rgba(232, 192, 116, 0.13); }
+.card-rarity {
+  position: absolute; z-index: 4; top: 10px; right: 10px;
+  min-width: 29px; min-height: 24px; padding: 0 7px;
+  background: rgba(7, 9, 13, 0.72); backdrop-filter: blur(6px);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+}
+.rarity-meta { color: var(--gold-deep); font-family: var(--mono); }
 .faction-badge { border-color: color-mix(in srgb, var(--faction-color, var(--gold)) 45%, transparent); color: var(--faction-color, var(--gold)); }
 .hp-badge { color: var(--gold-deep); }
 .series-tag { color: var(--dim); }
@@ -1061,6 +1081,8 @@ html[data-theme="light"] .edit-skill-remove { border-color: var(--line); color: 
 html[data-theme="light"] .edit-actions { border-top-color: var(--line); background: rgba(247, 241, 231, 0.9); }
 html[data-theme="light"] .edit-image-field input[type="file"] { color: #8f826e; }
 html[data-theme="light"] .edit-image-preview { border-color: var(--line); }
+html[data-theme="light"] .card-rarity { background: rgba(255, 252, 246, 0.82); box-shadow: 0 3px 12px rgba(78, 58, 31, 0.16); }
+html[data-theme="light"] .rarity-meta { color: #9a7844; }
 html[data-theme="light"] .name-prefix { border-color: rgba(134, 101, 48, 0.38); color: #7f5e2d; }
 html[data-theme="light"] .card-caption .card-prefix { color: #9a7844; }
 html[data-theme="light"] .prefix-badge { border-color: rgba(134, 101, 48, 0.38); color: #7f5e2d; }

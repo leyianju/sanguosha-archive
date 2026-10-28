@@ -203,6 +203,9 @@
               <button type="button" class="detail-viewer-btn" id="detailEditBtn">
                 <svg class="icon"><use href="#icon-edit"></use></svg> 编辑
               </button>
+              <button type="button" class="detail-viewer-btn detail-delete-btn" id="detailDeleteBtn" hidden>
+                删除
+              </button>
               <button type="button" class="detail-viewer-btn" id="detailViewerBtn">
                 <svg class="icon"><use href="#icon-expand"></use></svg> 纯净展示
               </button>
@@ -211,6 +214,7 @@
             <p class="detail-title" id="detailTitle">—</p>
             <div class="skills-block" id="detailSkills"></div>
             <blockquote class="detail-quote" id="detailQuote"></blockquote>
+            <div class="detail-references" id="detailReferences" hidden></div>
             <div class="attachments-block" id="detailAttachments" hidden>
               <div class="attachments-head">
                 <strong>附属牌</strong>
@@ -273,6 +277,7 @@
               <option value="A">A</option>
               <option value="S">S</option>
               <option value="SS">SS</option>
+              <option value="SSS">SSS</option>
             </select>
           </label>
           <label class="edit-field">
@@ -365,8 +370,11 @@
         <div class="attachment-copy">
           <p class="eyebrow"><span></span>ATTACHED CARD</p>
           <h2 id="attachmentName">—</h2>
+          <p class="detail-title" id="attachmentTitle" hidden></p>
           <p class="detail-title" id="attachmentKind">—</p>
           <p class="attachment-owner" id="attachmentOwner">—</p>
+          <div class="attachment-skills" id="attachmentSkills"></div>
+          <blockquote class="attachment-quote" id="attachmentQuote" hidden></blockquote>
           <p class="attachment-note" id="attachmentNote"></p>
           <div class="attachment-actions">
             <button type="button" class="button button-ghost" id="attachmentFlipBtn" hidden>翻到背面</button>

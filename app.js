@@ -352,7 +352,6 @@
               <i class="faction-dot"></i>
               <span>${escapeHtml(card.faction || "其他")}</span>
               <span class="hp-meta">· ${escapeHtml(hpLabel(card))}</span>
-              <span class="rarity-meta">· ${normalizeRarity(card.rarity)}</span>
               <span class="skill-count">· ${skills.length} 技能</span>
               ${attachmentCount ? `<span class="attachment-count">· ${attachmentCount} 附件</span>` : ""}
             </span>

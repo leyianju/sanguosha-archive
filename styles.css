@@ -488,52 +488,39 @@ html[data-readonly="true"] #folderOverlay { display: none !important; }
   font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em;
 }
 .prefix-badge { border-color: rgba(216, 184, 120, 0.4); color: var(--gold); }
-.rarity-badge {
-  --rarity-a: #aeb6c0;
-  --rarity-b: #56606b;
-  --rarity-glow: rgba(174, 182, 192, 0.28);
-  position: relative; display: inline-grid; place-items: center;
-  width: 30px; height: 33px; padding: 0 0 3px;
-  border: 0; border-radius: 0;
-  background: linear-gradient(145deg, var(--rarity-a) 0%, var(--rarity-b) 100%);
-  color: #fffdf5; font-family: "Times New Roman", "Songti SC", "STSong", serif;
-  font-size: 12px; font-weight: 700; letter-spacing: 0.02em; line-height: 1;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-  clip-path: polygon(50% 0, 94% 22%, 94% 78%, 50% 100%, 6% 78%, 6% 22%);
-  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.32));
-}
-.rarity-badge::before {
-  content: ""; position: absolute; inset: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  clip-path: inherit; pointer-events: none;
-}
-.rarity-badge::after {
-  content: ""; position: absolute; top: 5px; left: 8px;
-  width: 8px; height: 2px; border-radius: 2px;
-  background: rgba(255, 255, 255, 0.5); transform: rotate(-24deg);
+.rarity-edge {
+  position: absolute; z-index: 3; right: 0; bottom: 0; left: 0; height: 2px;
+  background: var(--rarity-ring, #aeb6c0); opacity: 0.82;
+  box-shadow: 0 0 9px var(--rarity-ring, #aeb6c0);
   pointer-events: none;
 }
-.rarity-D { --rarity-a: #b3bac4; --rarity-b: #545d68; --rarity-glow: rgba(179, 186, 196, 0.26); }
-.rarity-C { --rarity-a: #a8d2b5; --rarity-b: #3e7058; --rarity-glow: rgba(100, 168, 126, 0.3); }
-.rarity-B { --rarity-a: #9ac8e8; --rarity-b: #315f82; --rarity-glow: rgba(83, 154, 204, 0.34); }
-.rarity-A { --rarity-a: #d0aee7; --rarity-b: #603d7a; --rarity-glow: rgba(164, 116, 196, 0.36); }
-.rarity-S { --rarity-a: #f1c477; --rarity-b: #96551f; --rarity-glow: rgba(220, 151, 67, 0.38); }
-.rarity-SS {
-  --rarity-a: #ffe7a8; --rarity-b: #9d3e45; --rarity-glow: rgba(236, 188, 98, 0.52);
-  box-shadow: 0 0 18px rgba(236, 188, 98, 0.22);
+.card-rarity-mark {
+  --rarity-ring: #aeb6c0;
+  display: inline-flex; align-items: center; gap: 5px;
+  color: var(--muted); font-family: "Times New Roman", "Songti SC", serif;
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.12em; line-height: 1.4;
 }
-.rarity-badge[class*="rarity-S"] {
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.36)) drop-shadow(0 0 8px var(--rarity-glow));
+.card-rarity-mark::before {
+  content: ""; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--rarity-ring); box-shadow: 0 0 7px var(--rarity-ring);
 }
-.card-rarity {
-  position: absolute; z-index: 4; top: 11px; right: 11px;
-  width: 32px; height: 35px; padding-bottom: 3px; font-size: 13px;
-  transition: transform 0.3s var(--ease), filter 0.3s;
+.detail-rarity-mark {
+  --rarity-ring: #aeb6c0;
+  display: inline-flex; align-items: center; gap: 7px;
+  color: var(--muted); font-family: var(--mono);
+  font-size: 8px; letter-spacing: 0.12em; line-height: 1;
 }
-.card-open:hover .card-rarity { transform: translateY(-2px) scale(1.05); }
-.detail-kicker .rarity-badge {
-  width: 34px; height: 37px; margin-left: 1px; padding-bottom: 4px; font-size: 14px;
+.detail-rarity-mark::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--rarity-ring); box-shadow: 0 0 8px var(--rarity-ring);
 }
+.detail-rarity-mark.rarity-SS { color: var(--gold-bright); }
+.rarity-D { --rarity-ring: #b3bac4; }
+.rarity-C { --rarity-ring: #8fcaaa; }
+.rarity-B { --rarity-ring: #83bde2; }
+.rarity-A { --rarity-ring: #c5a2df; }
+.rarity-S { --rarity-ring: #e1aa66; }
+.rarity-SS { --rarity-ring: #f0ce87; text-shadow: 0 0 12px rgba(240, 206, 135, 0.35); }
 .faction-badge { border-color: color-mix(in srgb, var(--faction-color, var(--gold)) 45%, transparent); color: var(--faction-color, var(--gold)); }
 .hp-badge { color: var(--gold-deep); }
 .series-tag { color: var(--dim); }

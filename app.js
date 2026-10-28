@@ -10,8 +10,8 @@
   const THEME_KEY = "sanguosha-theme";
   const THEME_CHOICES = ["auto", "light", "dark"];
   const THEME_MEDIA = matchMedia("(prefers-color-scheme: dark)");
-  const RARITIES = ["D", "C", "B", "A", "S", "SS"];
-  const RARITY_RANK = { D: 0, C: 1, B: 2, A: 3, S: 4, SS: 5 };
+  const RARITIES = ["D", "C", "B", "A", "S", "SS", "SSS"];
+  const RARITY_RANK = { D: 0, C: 1, B: 2, A: 3, S: 4, SS: 5, SSS: 6 };
 
   const FACTION_COLORS = {
     魏: "#6b9bc2",
@@ -29,7 +29,7 @@
     TE: "TE",
     "2304-特殊": "特殊",
   };
-  const FOLDER_ORDER = ["2304", "TE", "SP"];
+  const FOLDER_ORDER = ["2304", "TE", "SP", "坤坤杀", "红星星火"];
 
   const state = {
     cards: [],
@@ -89,9 +89,56 @@
     return text;
   }
 
+  async function deleteCard(id) {
+    if (READ_ONLY) return;
+    const card = state.cards.find((item) => item.id === id);
+    if (!card) return;
+    const attachments = state.attachments.filter((item) => item.owner_id === id).length;
+    const extra = attachments ? `\n名下 ${attachments} 张附属牌也会一起删除。` : "";
+    if (!window.confirm(`确定删除「${card.name}」？${extra}`)) return;
+    try {
+      const response = await fetch(`api/cards/${encodeURIComponent(id)}`, { method: "DELETE" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || `删除失败（HTTP ${response.status}）`);
+      state.cards = state.cards.filter((item) => item.id !== id);
+      state.attachments = state.attachments.filter((item) => item.owner_id !== id);
+      if (state.detailId === id) closeDetail();
+      render();
+      toast(`「${card.name}」已删除${attachments ? `，同时删除 ${attachments} 张附属牌` : ""}。`, "success", "卡牌已删除");
+    } catch (error) {
+      toast(error.message, "error", "删除失败");
+    }
+  }
+
   function seriesLabel(series) {
     if (series === "2304-特殊") return "特殊编号";
-    return series || "标准";
+    return folderName(series) || series || "标准";
+  }
+
+  function skillHtml(skill) {
+    const rich = String(skill && skill.text_html || "").trim();
+    return rich || escapeHtml(skill && skill.text || "");
+  }
+
+  function sourceTypeLabel(type) {
+    return {
+      self: "本卡",
+      variant: "同名",
+      general: "武将",
+      attachment: "附加牌",
+      classic: "经典",
+    }[type] || "来源";
+  }
+
+  function skillRefsHtml(skill, card) {
+    const refs = ((card.skill_refs || {})[skill.name] || [])
+      .filter((ref) => ref.source_type !== "classic");
+    if (!refs.length) return "";
+    return `<div class="skill-refs">引用：${refs.map((ref) => {
+      const target = ref.source_type === "classic" ? "" : `data-source-id="${escapeHtml(ref.source_id)}"`;
+      const label = `${ref.name} · ${ref.source_name || ref.source_title || ""}（${sourceTypeLabel(ref.source_type)}）`;
+      return `<button type="button" class="skill-ref" ${target} title="${escapeHtml(ref.source_text || label)}">${escapeHtml(label)}</button>`;
+    }).join("")}</div>`;
   }
 
   function normalizeFolders(raw) {
@@ -197,6 +244,8 @@
       card.prefix,
       card.rarity,
       card.quote,
+      ...Object.values(card.skill_refs || {}).flatMap((refs) =>
+        (refs || []).flatMap((ref) => [ref.name, ref.source_name, ref.source_title])),
       ...(card.skills || []).flatMap((skill) => [skill.name, skill.text]),
     ];
     return chunks.join(" ").toLocaleLowerCase().includes(needle);
@@ -417,28 +466,38 @@
     $("#detailPrefix").textContent = prefix ? `前缀 ${prefix}` : "";
     const rarity = normalizeRarity(card.rarity);
     $("#detailRarity").className = `detail-rarity-mark rarity-${rarity}`;
-    $("#detailRarity").textContent = `稀有度 ${rarity}`;
+    $("#detailRarity").innerHTML = `<span>稀有度</span><strong>${rarity}</strong>`;
     $("#detailRarity").title = `稀有度 ${rarity}`;
     $("#detailTitle").textContent = card.title;
+    $("#detailDeleteBtn").hidden = READ_ONLY;
     $("#detailFaction").textContent = faction;
     $("#detailFaction").style.setProperty("--faction-color", factionColor(faction));
     $("#detailHp").textContent = hpLabel(card);
     $("#detailSeries").textContent = seriesLabel(card.series);
     $("#detailSkills").innerHTML = skills.length
       ? skills.map((skill, index) => `
-          <section class="skill">
-            <span class="skill-name">${escapeHtml(skill.name || `技能 ${index + 1}`)}</span>
-            <p class="skill-text">${escapeHtml(skill.text || "")}</p>
+          <section class="skill${skill.derived ? " derived" : ""}">
+            <span class="skill-name">${escapeHtml(skill.name || `技能 ${index + 1}`)}${skill.derived ? `<span class="derived-tag">衍生</span>` : ""}</span>
+            <p class="skill-text">${skillHtml(skill)}</p>
+            ${skillRefsHtml(skill, card)}
           </section>`).join("")
       : `<p class="skill-text" style="color:var(--dim)">卡面上没有识别到技能文字。</p>`;
     $("#detailQuote").hidden = !card.quote;
     const quoteText = card.quote || "";
     const sourceAt = quoteText.lastIndexOf("——");
-    $("#detailQuote").innerHTML = quoteText
-      ? (sourceAt > 0 && quoteText.length - sourceAt > 2
-        ? `“${escapeHtml(quoteText.slice(0, sourceAt))}”<span class="quote-source">${escapeHtml(quoteText.slice(sourceAt))}</span>`
-        : `“${escapeHtml(quoteText)}”`)
+    const quoteBody = (sourceAt > 0 && quoteText.length - sourceAt > 2)
+      ? quoteText.slice(0, sourceAt).trim()
+      : quoteText.trim();
+    const quoteSource = (sourceAt > 0 && quoteText.length - sourceAt > 2)
+      ? quoteText.slice(sourceAt).trim()
       : "";
+    const quoteDisplay = quoteBody
+      ? (/^[“「]/.test(quoteBody) ? quoteBody : `“${quoteBody}”`)
+      : "";
+    $("#detailQuote").innerHTML = quoteDisplay
+      ? `<span class="quote-text">${escapeHtml(quoteDisplay)}</span>${quoteSource ? `<span class="quote-source">${escapeHtml(quoteSource)}</span>` : ""}`
+      : "";
+    renderDetailReferences(card);
     renderDetailAttachments(card);
     $("#detailMetaLeft").textContent = `${card.id} · ${skills.length} 个技能`;
     $("#detailMetaRight").textContent = `${faction} · ${seriesLabel(card.series)}`;
@@ -471,9 +530,11 @@
     row.innerHTML = `
       <input class="edit-skill-name" maxlength="30" placeholder="技能名" autocomplete="off">
       <textarea class="edit-skill-text" rows="3" maxlength="1200" placeholder="技能描述"></textarea>
+      <label class="edit-skill-derived"><input type="checkbox" class="edit-skill-derived-input"> 衍生技</label>
       <button type="button" class="edit-skill-remove" aria-label="删除这个技能">×</button>`;
     row.querySelector(".edit-skill-name").value = skill.name || "";
     row.querySelector(".edit-skill-text").value = skill.text || "";
+    row.querySelector(".edit-skill-derived-input").checked = Boolean(skill.derived);
     row.querySelector(".edit-skill-remove").addEventListener("click", () => {
       const rows = $$(".edit-skill", $("#editSkills"));
       if (rows.length <= 1) {
@@ -551,6 +612,7 @@
       .map((row) => ({
         name: row.querySelector(".edit-skill-name").value.trim(),
         text: row.querySelector(".edit-skill-text").value.trim(),
+        derived: row.querySelector(".edit-skill-derived-input").checked,
       }))
       .filter((skill) => skill.name || skill.text);
   }
@@ -773,6 +835,7 @@
           <select class="folder-parent-select" aria-label="上级分册">${parentOptions}</select>
           <small>${count} 张</small>
           <button type="button" data-save-folder>保存</button>
+          <button type="button" class="folder-delete" data-delete-folder title="只能删除空分册">删除</button>
         </div>`;
     }).join("");
     const parentSelect = $("#newFolderParent");
@@ -823,6 +886,28 @@
     }
   }
 
+  async function deleteFolder(key) {
+    if (READ_ONLY) return;
+    const name = folderName(key);
+    if (!window.confirm(`确定删除分册「${name}」？\n只有空分册能删除，卡不会自动删除。`)) return;
+    try {
+      const response = await fetch(`api/folders/${encodeURIComponent(key)}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || `删除失败（HTTP ${response.status}）`);
+      if (data.folders) state.folders = normalizeFolders(data.folders);
+      if (state.folder === key) state.folder = "all";
+      render();
+      renderFolderManager();
+      showFolderError("");
+      toast(`分册「${name}」已删除。`, "success", "分册已删除");
+    } catch (error) {
+      showFolderError(error.message);
+    }
+  }
+
   async function addFolder() {
     if (READ_ONLY) return;
     const name = $("#newFolderName").value.trim();
@@ -856,6 +941,45 @@
     return owner ? `${owner.name} · ${owner.title}` : "未关联角色";
   }
 
+  function classicRefs(card) {
+    const seen = new Map();
+    Object.values(card.skill_refs || {}).flat().forEach((ref) => {
+      if (ref.source_type !== "classic") return;
+      const key = `${ref.name}|${ref.source_title || ""}`;
+      if (!seen.has(key)) seen.set(key, ref);
+    });
+    return [...seen.values()];
+  }
+
+  function renderDetailReferences(card) {
+    const box = $("#detailReferences");
+    const refs = classicRefs(card);
+    if (!refs.length) {
+      box.hidden = true;
+      box.innerHTML = "";
+      return;
+    }
+    const skillCards = state.attachments.filter(
+      (item) => item.owner_id === card.id && item.kind === "技能牌"
+    );
+    if (skillCards.length) {
+      box.hidden = false;
+      box.innerHTML = `<div class="references-title">经典技能</div>
+        <p class="references-note">已写在技能牌：${skillCards.map((item) => escapeHtml(item.name)).join("、")}。</p>`;
+      return;
+    }
+    box.hidden = false;
+    box.innerHTML = `<div class="references-title">经典技能引用</div>${refs.map((ref) => `
+      <div class="classic-reference">
+        <div class="classic-reference-head">
+          <strong>${escapeHtml(ref.name)}</strong>
+          <span>${escapeHtml(ref.source_title || "经典三国杀")}</span>
+          ${ref.source_url ? `<a href="${escapeHtml(ref.source_url)}" target="_blank" rel="noopener">来源</a>` : ""}
+        </div>
+        <p>${escapeHtml(ref.source_text || "")}</p>
+      </div>`).join("")}`;
+  }
+
   function renderDetailAttachments(card) {
     const items = state.attachments.filter((item) => item.owner_id === card.id);
     const block = $("#detailAttachments");
@@ -884,8 +1008,23 @@
     $("#attachmentImage").src = item.image;
     $("#attachmentImage").alt = `${item.name}附属牌`;
     $("#attachmentName").textContent = item.name;
+    $("#attachmentTitle").hidden = !item.title;
+    $("#attachmentTitle").textContent = item.title || "";
     $("#attachmentKind").textContent = item.kind || "附属牌";
     $("#attachmentOwner").textContent = `所属：${attachmentOwnerName(item)}`;
+    const attachmentSkills = item.skills || [];
+    $("#attachmentSkills").innerHTML = attachmentSkills.length
+      ? attachmentSkills.map((skill) => `
+          <section class="skill${skill.derived ? " derived" : ""}">
+            <span class="skill-name">${escapeHtml(skill.name || "技能")}${skill.derived ? `<span class="derived-tag">衍生</span>` : ""}</span>
+            <p class="skill-text">${skillHtml(skill)}</p>
+          </section>`).join("")
+      : "";
+    const attachmentQuote = String(item.quote || "").trim();
+    $("#attachmentQuote").hidden = !attachmentQuote;
+    $("#attachmentQuote").textContent = attachmentQuote
+      ? (/^[“「]/.test(attachmentQuote) ? attachmentQuote : `“${attachmentQuote}”`)
+      : "";
     $("#attachmentNote").textContent = item.note || "";
     $("#attachmentFlipBtn").hidden = !item.back;
     $("#attachmentFlipBtn").textContent = "翻到背面";
@@ -1126,6 +1265,12 @@
     $("#manageFoldersBtn").addEventListener("click", openFolderManager);
     $("#addFolderBtn").addEventListener("click", addFolder);
     $("#folderManageList").addEventListener("click", (event) => {
+      const deleteButton = event.target.closest("[data-delete-folder]");
+      if (deleteButton) {
+        const deleteRow = deleteButton.closest("[data-folder-key]");
+        deleteFolder(deleteRow.dataset.folderKey);
+        return;
+      }
       const button = event.target.closest("[data-save-folder]");
       if (!button) return;
       const row = button.closest("[data-folder-key]");
@@ -1178,6 +1323,19 @@
     $("#detailNextBtn").addEventListener("click", () => moveDetail(1));
     $("#detailEditBtn").addEventListener("click", () => {
       if (state.detailId) openEdit(state.detailId);
+    });
+    $("#detailDeleteBtn").addEventListener("click", () => {
+      if (state.detailId) deleteCard(state.detailId);
+    });
+    $("#detailSkills").addEventListener("click", (event) => {
+      const button = event.target.closest(".skill-ref");
+      if (!button || !button.dataset.sourceId) return;
+      const sourceId = button.dataset.sourceId;
+      if (state.cards.some((card) => card.id === sourceId)) {
+        showDetail(sourceId);
+      } else if (state.attachments.some((item) => item.id === sourceId)) {
+        openAttachment(sourceId);
+      }
     });
     $("#detailAttachmentGrid").addEventListener("click", (event) => {
       const button = event.target.closest("[data-attachment-id]");

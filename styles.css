@@ -489,25 +489,51 @@ html[data-readonly="true"] #folderOverlay { display: none !important; }
 }
 .prefix-badge { border-color: rgba(216, 184, 120, 0.4); color: var(--gold); }
 .rarity-badge {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 25px; min-height: 22px; padding: 0 6px;
-  border: 1px solid currentColor; color: #aab0ba;
-  font-family: var(--mono); font-size: 9px; font-weight: 600;
-  letter-spacing: 0.06em; line-height: 1;
+  --rarity-a: #aeb6c0;
+  --rarity-b: #56606b;
+  --rarity-glow: rgba(174, 182, 192, 0.28);
+  position: relative; display: inline-grid; place-items: center;
+  width: 30px; height: 33px; padding: 0 0 3px;
+  border: 0; border-radius: 0;
+  background: linear-gradient(145deg, var(--rarity-a) 0%, var(--rarity-b) 100%);
+  color: #fffdf5; font-family: "Times New Roman", "Songti SC", "STSong", serif;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.02em; line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  clip-path: polygon(50% 0, 94% 22%, 94% 78%, 50% 100%, 6% 78%, 6% 22%);
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.32));
 }
-.rarity-D { color: #8d929b; background: rgba(141, 146, 155, 0.1); }
-.rarity-C { color: #84a978; background: rgba(132, 169, 120, 0.1); }
-.rarity-B { color: #73a5c7; background: rgba(115, 165, 199, 0.1); }
-.rarity-A { color: #ae8dca; background: rgba(174, 141, 202, 0.1); }
-.rarity-S { color: #d79a58; background: rgba(215, 154, 88, 0.1); }
-.rarity-SS { color: #e8c074; background: linear-gradient(135deg, rgba(232, 192, 116, 0.18), rgba(174, 93, 68, 0.12)); border-color: rgba(232, 192, 116, 0.7); box-shadow: 0 0 12px rgba(232, 192, 116, 0.13); }
+.rarity-badge::before {
+  content: ""; position: absolute; inset: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  clip-path: inherit; pointer-events: none;
+}
+.rarity-badge::after {
+  content: ""; position: absolute; top: 5px; left: 8px;
+  width: 8px; height: 2px; border-radius: 2px;
+  background: rgba(255, 255, 255, 0.5); transform: rotate(-24deg);
+  pointer-events: none;
+}
+.rarity-D { --rarity-a: #b3bac4; --rarity-b: #545d68; --rarity-glow: rgba(179, 186, 196, 0.26); }
+.rarity-C { --rarity-a: #a8d2b5; --rarity-b: #3e7058; --rarity-glow: rgba(100, 168, 126, 0.3); }
+.rarity-B { --rarity-a: #9ac8e8; --rarity-b: #315f82; --rarity-glow: rgba(83, 154, 204, 0.34); }
+.rarity-A { --rarity-a: #d0aee7; --rarity-b: #603d7a; --rarity-glow: rgba(164, 116, 196, 0.36); }
+.rarity-S { --rarity-a: #f1c477; --rarity-b: #96551f; --rarity-glow: rgba(220, 151, 67, 0.38); }
+.rarity-SS {
+  --rarity-a: #ffe7a8; --rarity-b: #9d3e45; --rarity-glow: rgba(236, 188, 98, 0.52);
+  box-shadow: 0 0 18px rgba(236, 188, 98, 0.22);
+}
+.rarity-badge[class*="rarity-S"] {
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.36)) drop-shadow(0 0 8px var(--rarity-glow));
+}
 .card-rarity {
-  position: absolute; z-index: 4; top: 10px; right: 10px;
-  min-width: 29px; min-height: 24px; padding: 0 7px;
-  background: rgba(7, 9, 13, 0.72); backdrop-filter: blur(6px);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+  position: absolute; z-index: 4; top: 11px; right: 11px;
+  width: 32px; height: 35px; padding-bottom: 3px; font-size: 13px;
+  transition: transform 0.3s var(--ease), filter 0.3s;
 }
-.rarity-meta { color: var(--gold-deep); font-family: var(--mono); }
+.card-open:hover .card-rarity { transform: translateY(-2px) scale(1.05); }
+.detail-kicker .rarity-badge {
+  width: 34px; height: 37px; margin-left: 1px; padding-bottom: 4px; font-size: 14px;
+}
 .faction-badge { border-color: color-mix(in srgb, var(--faction-color, var(--gold)) 45%, transparent); color: var(--faction-color, var(--gold)); }
 .hp-badge { color: var(--gold-deep); }
 .series-tag { color: var(--dim); }
@@ -1081,8 +1107,6 @@ html[data-theme="light"] .edit-skill-remove { border-color: var(--line); color: 
 html[data-theme="light"] .edit-actions { border-top-color: var(--line); background: rgba(247, 241, 231, 0.9); }
 html[data-theme="light"] .edit-image-field input[type="file"] { color: #8f826e; }
 html[data-theme="light"] .edit-image-preview { border-color: var(--line); }
-html[data-theme="light"] .card-rarity { background: rgba(255, 252, 246, 0.82); box-shadow: 0 3px 12px rgba(78, 58, 31, 0.16); }
-html[data-theme="light"] .rarity-meta { color: #9a7844; }
 html[data-theme="light"] .name-prefix { border-color: rgba(134, 101, 48, 0.38); color: #7f5e2d; }
 html[data-theme="light"] .card-caption .card-prefix { color: #9a7844; }
 html[data-theme="light"] .prefix-badge { border-color: rgba(134, 101, 48, 0.38); color: #7f5e2d; }

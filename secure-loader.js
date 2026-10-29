@@ -62,14 +62,30 @@
       if (!chunkPaths.length) throw new Error("加密卡册没有分块信息。");
       status.textContent = `读取加密卡册（${chunkPaths.length} 块）…`;
       const version = envelope.version || "";
-      const chunkBuffers = await Promise.all(chunkPaths.map(async (path) => {
+      const chunkBuffers = new Array(chunkPaths.length);
+      async function readChunk(path, index) {
         const url = version
           ? `${path}${path.includes("?") ? "&" : "?"}v=${encodeURIComponent(version)}`
           : path;
-        const chunkResponse = await fetch(url, { cache: "no-store" });
-        if (!chunkResponse.ok) throw new Error("加密卡册分块读取失败。");
-        return new Uint8Array(await chunkResponse.arrayBuffer());
-      }));
+        let lastError;
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          try {
+            const chunkResponse = await fetch(url, { cache: "no-store" });
+            if (!chunkResponse.ok) throw new Error(`HTTP ${chunkResponse.status}`);
+            chunkBuffers[index] = new Uint8Array(await chunkResponse.arrayBuffer());
+            return;
+          } catch (error) {
+            lastError = error;
+            await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+          }
+        }
+        throw new Error(`加密卡册分块读取失败：${lastError || ""}`);
+      }
+      for (let start = 0; start < chunkPaths.length; start += 4) {
+        const slice = chunkPaths.slice(start, start + 4);
+        await Promise.all(slice.map((path, offset) => readChunk(path, start + offset)));
+        status.textContent = `读取加密卡册 ${Math.min(start + 4, chunkPaths.length)} / ${chunkPaths.length}…`;
+      }
       const total = chunkBuffers.reduce((sum, chunk) => sum + chunk.length, 0);
       const cipher = new Uint8Array(total);
       let offset = 0;
@@ -118,7 +134,12 @@
       setTimeout(() => lock.remove(), 450);
     } catch (err) {
       status.textContent = "";
-      fail("口令不对，或者卡册文件损坏。");
+      const message = String(err && err.message || "");
+      if (message.includes("分块读取") || message.includes("Failed to fetch") || message.includes("NetworkError")) {
+        fail("卡册读取失败，请检查网络后刷新重试。");
+      } else {
+        fail("口令不对，或者卡册文件损坏。");
+      }
     }
   }
 

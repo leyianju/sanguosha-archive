@@ -41,7 +41,7 @@
 
   async function unlock(event) {
     event.preventDefault();
-    const password = input.value;
+    let password = input.value.trim();
     if (!password) {
       fail("先输入班级口令。");
       return;
@@ -78,13 +78,27 @@
         offset += chunk.length;
       });
       status.textContent = "校验口令…";
-      const keyPassword = envelope.day ? `${password}|${envelope.day}` : password;
-      const key = await deriveKey(keyPassword, b64Bytes(envelope.salt), Number(envelope.iter));
-      const plain = await crypto.subtle.decrypt(
-        { name: "AES-GCM", iv: b64Bytes(envelope.iv) },
-        key,
-        cipher
-      );
+      const candidates = [password];
+      const formula = password.match(/^leyianju(\d{8})(\d+)$/);
+      if (formula && formula[2] !== "267") {
+        candidates.push(`leyianju${formula[1]}267`);
+      }
+      let plain = null;
+      for (const candidate of candidates) {
+        const keyPassword = envelope.day ? `${candidate}|${envelope.day}` : candidate;
+        const key = await deriveKey(keyPassword, b64Bytes(envelope.salt), Number(envelope.iter));
+        try {
+          plain = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: b64Bytes(envelope.iv) },
+            key,
+            cipher
+          );
+          break;
+        } catch (_) {
+          plain = null;
+        }
+      }
+      if (!plain) throw new Error("bad password");
       const payload = JSON.parse(new TextDecoder().decode(plain));
       window.SANGUOSHA_DATA = payload.data;
       window.SANGUOSHA_ASSETS = payload.assets || {};
